@@ -1,16 +1,21 @@
+var source_hqbpillvul_argv = 'argv';
+var source_hqbpillvul_env = 'env';
+
 var argvs = [
-  'env',
-  'one',
-  'two',
-  'three',
-  'four',
-  'five',
-  'six',
-  'seven'
+  source_hqbpillvul_argv,
+  source_hqbpillvul_argv,
+  source_hqbpillvul_argv,
+  source_hqbpillvul_argv,
+  source_hqbpillvul_argv,
+  source_hqbpillvul_argv,
+  source_hqbpillvul_argv,
+  source_hqbpillvul_argv
 ];
 
 var env = {
-  'HOME': "~/"
+  'HOME': source_hqbpillvul_env,
+  'PATH': source_hqbpillvul_env,
+  'USER': source_hqbpillvul_env
 };
 
 

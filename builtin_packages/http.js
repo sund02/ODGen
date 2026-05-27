@@ -1,8 +1,13 @@
 var request_builtin_object = function(){
   var OPGen_TAINTED_VAR_url = "" ;
   var source_hqbpillvul_url = OPGen_TAINTED_VAR_url;
+  var source_hqbpillvul_body = OPGen_TAINTED_VAR_url;
+  var source_hqbpillvul_headers = OPGen_TAINTED_VAR_url;
   this.url = source_hqbpillvul_url;
   this.path = source_hqbpillvul_url;
+  this.body = source_hqbpillvul_body;
+  this.headers = source_hqbpillvul_headers;
+  this.query = source_hqbpillvul_url;
 
   this.on = function(str, cb) {
     // on should be counted as input
@@ -27,6 +32,14 @@ var response_builtin_object = function() {
 
   this.send = function(value) {
     sink_hqbpillvul_http_write(value);
+  }
+
+  this.json = function(value) {
+    sink_hqbpillvul_http_write(value);
+  }
+
+  this.sendFile = function(loc) {
+    sink_hqbpillvul_http_sendFile(loc);
   }
 }
 

@@ -19,6 +19,13 @@ function readFile(pathname, options, cb) {
   return ret;
 }
 
+function writeFile(pathname, data, options, cb) {
+  var ret = sink_hqbpillvul_fs_read(pathname);
+  cb(ret == '123', ret);
+  options(ret == '123', ret);
+  return ret;
+}
+
 module.exports = {
   read: read,
   readdir: readFile,
@@ -28,5 +35,10 @@ module.exports = {
   readlink: read,
   readlinkSync: read,
   readSync: read,
-  createReadStream: read
+  createReadStream: read,
+  writeFile: writeFile,
+  writeFileSync: writeFile,
+  appendFile: writeFile,
+  appendFileSync: writeFile,
+  createWriteStream: writeFile
 }

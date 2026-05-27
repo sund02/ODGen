@@ -3,6 +3,23 @@ class TraceRule:
     a rule container, which include a rule and a related checking function
     """
 
+    USER_INPUT_SOURCE_FILES = {
+        'http.js',
+        'https.js',
+        'net.js',
+        'express.js',
+        'ws.js',
+        'process.js',
+        'yargs.js',
+        'minimist.js',
+        'commander.js',
+    }
+
+    USER_INPUT_NAME_PREFIXES = (
+        'source_hqbpillvul',
+        'OPGen_TAINTED_VAR',
+    )
+
     def __init__(self, key, value, G):
         self.key = key
         self.value = value
@@ -111,6 +128,7 @@ class TraceRule:
                         # if not current, maybe inside the call there is another call
                         continue
                     return cur_func in func_names 
+        return False
 
     def start_within_file(self, file_names, path):
         """
@@ -127,6 +145,7 @@ class TraceRule:
         cur_node = self.graph.get_node_attr(start_node)
         if file_name is None:
             return False
+        file_name = file_name.replace('\\', '/')
         file_name = file_name if '/' not in file_name else file_name.split('/')[-1]
         return file_name in file_names
 
@@ -162,6 +181,10 @@ class TraceRule:
         """
         pre_node = None
         for node in path:
+            node_name = self.graph.get_name_from_child(node)
+            if node_name and node_name.startswith(self.USER_INPUT_NAME_PREFIXES):
+                return True
+
             if not pre_node:
                 pre_node = node;
                 continue
@@ -178,7 +201,7 @@ class TraceRule:
                         return True
             pre_node = node
 
-        if self.start_within_file(['http.js', 'process.js', 'yargs.js'], path):
+        if self.start_within_file(self.USER_INPUT_SOURCE_FILES, path):
             return True
         return False
 
@@ -206,4 +229,3 @@ class TraceRule:
             return False
 
         return check_function(self.value, path)
-

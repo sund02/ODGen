@@ -325,14 +325,9 @@ def vul_checking(G, pathes, vul_type):
             [('has_user_input', None), ('not_exist_func', sanitation_funcs)]
             ]
     path_traversal = [
-            [('start_with_var', ['OPGen_TAINTED_VAR_url']),
+            [('has_user_input', None),
                 ('not_exist_func', sanitation_funcs), 
-                ('end_with_func', sink_funcs.get_sinks_by_vul_type('path_traversal')),
-                ('exist_func', ['sink_hqbpillvul_fs_read'])
-            ],
-            [('start_with_var', ['OPGen_TAINTED_VAR_url']),
-                ('not_exist_func', sanitation_funcs), 
-                ('end_with_func', ['sink_hqbpillvul_http_sendFile'])
+                ('end_with_func', sink_funcs.get_sinks_by_vul_type('path_traversal'))
             ]
             ]
     """

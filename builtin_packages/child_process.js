@@ -26,6 +26,12 @@ function execFile(command, options='nothing', dict='nothing', callback='nobk') {
   callback(err, stdout, stderr);
 }
 
+function execFileSync(command, options='nothing', dict='nothing') {
+  var sink = command;
+  sink_hqbpillvul_execFile(sink);
+  return 'stdout';
+}
+
 function spawn(command, args='nothing', options='nothion') {
   sink_hqbpillvul_spawn(command);
 }
@@ -34,11 +40,17 @@ function spawnSync(command, args='nothing', options='nothion') {
   sink_hqbpillvul_spawnSync(command);
 }
 
+function fork(modulePath, args='nothing', options='nothing') {
+  sink_hqbpillvul_spawn(modulePath);
+}
+
 
 module.exports = {
   exec,
   execFile,
+  execFileSync,
   execSync,
   spawn,
-  spawnSync
+  spawnSync,
+  fork
 }

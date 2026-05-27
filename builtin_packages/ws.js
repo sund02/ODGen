@@ -1,13 +1,18 @@
 var request_builtin_object = function(){
   var source_hqbpillvul_url = '';
+  var source_hqbpillvul_body = source_hqbpillvul_url;
+  var source_hqbpillvul_query = source_hqbpillvul_url;
+  var source_hqbpillvul_headers = source_hqbpillvul_url;
   var req_body = {
     'user': {
-      'name':source_hqbpillvul_url
+      'name':source_hqbpillvul_body
     }
   }
   this.url = source_hqbpillvul_url;
   this.path = source_hqbpillvul_url;
+  this.query = source_hqbpillvul_query;
   this.body = req_body;
+  this.headers = source_hqbpillvul_headers;
   this.user = source_hqbpillvul_url;
   this.params = [source_hqbpillvul_url, source_hqbpillvul_url, 
     source_hqbpillvul_url, source_hqbpillvul_url];
@@ -44,7 +49,16 @@ var response_builtin_object = function() {
     return null;
   }
 
+  this.json = function(value) {
+    sink_hqbpillvul_http_write(value);
+    return null;
+  }
+
   this.sendFile = function(loc) {
+    sink_hqbpillvul_http_sendFile(loc);
+  }
+
+  this.download = function(loc) {
     sink_hqbpillvul_http_sendFile(loc);
   }
 }

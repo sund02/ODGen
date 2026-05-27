@@ -8,12 +8,27 @@ class Sinks:
                 'sink_hqbpillvul_execSync',
                 'sink_hqbpillvul_spawn',
                 'sink_hqbpillvul_spawnSync',
-                'sink_hqbpillvul_db'
+                'sink_hqbpillvul_db',
+                'exec',
+                'execSync',
+                'execFile',
+                'execFileSync',
+                'spawn',
+                'spawnSync',
+                'fork'
                 ],
             'xss': [
                 'pipe',
                 'sink_hqbpillvul_http_write',
-                'sink_hqbpillvul_http_setHeader'
+                'sink_hqbpillvul_http_setHeader',
+                'write',
+                'end',
+                'send',
+                'json',
+                'jsonp',
+                'render',
+                'redirect',
+                'setHeader'
                 ],
             'proto_pollution': [
                 'merge', 'extend', 'clone', 'parse'
@@ -24,15 +39,39 @@ class Sinks:
                 "sink_hqbpillvul_execFile",
                 'sink_hqbpillvul_exec',
                 'sink_hqbpillvul_execSync',
-                'sink_hqbpillvul_eval'
+                'sink_hqbpillvul_eval',
+                'sink_hqbpillvul_code_execution',
+                'setTimeout',
+                'setInterval',
+                'runInThisContext',
+                'runInNewContext',
+                'runInContext',
+                'compileFunction'
                 ],
             'sanitation': [
                 'parseInt'
                 ],
             'path_traversal': [
                 'pipe',
-                'sink_hqbpillvul_http_write',
+                'sink_hqbpillvul_fs_read',
                 'sink_hqbpillvul_http_sendFile',
+                'read',
+                'readFile',
+                'readFileSync',
+                'readdir',
+                'readdirSync',
+                'readlink',
+                'readlinkSync',
+                'readSync',
+                'createReadStream',
+                'writeFile',
+                'writeFileSync',
+                'appendFile',
+                'appendFileSync',
+                'createWriteStream',
+                'sendFile',
+                'download',
+                'static',
                 ],
             'depd': [
                 'sink_hqbpillvul_pp',
