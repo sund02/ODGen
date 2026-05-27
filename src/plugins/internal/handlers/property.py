@@ -10,6 +10,26 @@ from itertools import chain
 from src.plugins.internal.modeled_js_builtins_list import modeled_builtin_lists
 from typing import Tuple
 
+DANGEROUS_PROTO_KEYS = {'__proto__', 'constructor', 'prototype'}
+
+def may_reach_builtin_prototype(G, prop_names, prop_obj_nodes, name_tainted):
+    """
+    A tainted property name can stand for __proto__/constructor/prototype.
+    If resolving that property reaches a built-in prototype object, treat the
+    access as a prototype-pollution target.
+    """
+    if not name_tainted:
+        return False
+
+    has_dangerous_key = any(
+        prop_name == wildcard or prop_name in DANGEROUS_PROTO_KEYS
+        for prop_name in prop_names
+    )
+    if not has_dangerous_key:
+        return False
+
+    return any(obj in G.builtin_prototypes for obj in prop_obj_nodes)
+
 class HandleProp(Handler):
     """
     handle property
@@ -159,6 +179,10 @@ def handle_prop(G, ast_node, side=None, extra=ExtraInfo()) \
                 .format(ast_node, G.get_node_attr(ast_node).get('lineno:int'))
                 + sty.rs.all)
             #loggers.res_logger.info(f"Internal property tampering detected in {G.package_name}")
+
+    if G.check_proto_pollution and may_reach_builtin_prototype(
+            G, prop_names, prop_obj_nodes, name_tainted):
+        parent_is_proto = True
 
     if len(prop_names) == 1:
         name = f'{parent_name}.{prop_names[0]}'
