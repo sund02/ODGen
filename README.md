@@ -7,6 +7,211 @@ If you are the AE reviewer, please come here first! [README\_for\_AE\_reviewers.
 ## Installation
 Please check out [INSTALL.md](./INSTALL.md) for the detailed instruction of the installation.
 
+## Project Extensions
+
+This fork contains two focused improvements developed while reproducing the
+ODGen artifact benchmark. Each improvement is kept on a separate branch so it
+can be compared with the original implementation on `master`.
+
+### Improved prototype pollution detection
+
+Branch: [`improve-prototype-pollution`](https://github.com/sund02/ODGen/tree/improve-prototype-pollution)
+
+The original implementation could miss a write such as:
+
+```js
+target[userKey] = userValue;
+```
+
+when `userKey` is attacker-controlled and may resolve to `__proto__`,
+`constructor`, or `prototype`. The improved property handler checks whether a
+tainted computed key may resolve to a built-in shared prototype while the
+Object Dependence Graph is being constructed.
+
+The targeted regression test is stored at:
+
+```text
+tests/packages/prototype_pollution/tainted-computed-proto-key.js
+```
+
+Run the test against the original implementation:
+
+```bash
+git switch master
+
+docker run --rm \
+  -v "$PWD/tests/packages/prototype_pollution/tainted-computed-proto-key.js:/case.js:ro" \
+  iamthesong/odgen:latest bash -lc '
+cd /root/projs/ODGen
+rm -rf logs && mkdir -p logs
+python odgen.py -t proto_pollution -maq /case.js --timeout 120
+cat logs/succ.log
+'
+```
+
+Run the same test against the improved implementation:
+
+```bash
+git switch improve-prototype-pollution
+
+docker run --rm \
+  -v "$PWD:/host-code:ro" \
+  iamthesong/odgen:latest bash -lc '
+cp /host-code/src/plugins/internal/handlers/property.py \
+  /root/projs/ODGen/src/plugins/internal/handlers/property.py
+cd /root/projs/ODGen
+rm -rf logs && mkdir -p logs
+python odgen.py -t proto_pollution -maq \
+  /host-code/tests/packages/prototype_pollution/tainted-computed-proto-key.js \
+  --timeout 120
+cat logs/succ.log
+'
+```
+
+Expected targeted-test result:
+
+| Version | Detections |
+| ------- | ---------- |
+| Original `master` | 0 |
+| `improve-prototype-pollution` | 1 |
+
+Run the original prototype-pollution artifact benchmark:
+
+```bash
+git switch master
+mkdir -p pp-artifact-master
+
+docker run --rm \
+  -v "$PWD/pp-artifact-master:/host-results" \
+  iamthesong/odgen:latest bash -lc '
+cd /root/projs/ODGen
+rm -rf logs && mkdir -p logs
+python odgen.py -t proto_pollution -maq \
+  --list ./lists/proto_pollution.list --timeout 120
+cp logs/succ.log /host-results/proto_pollution.succ.log
+'
+```
+
+Run the improved prototype-pollution artifact benchmark:
+
+```bash
+git switch improve-prototype-pollution
+mkdir -p pp-artifact-improved
+
+docker run --rm \
+  -v "$PWD:/host-code:ro" \
+  -v "$PWD/pp-artifact-improved:/host-results" \
+  iamthesong/odgen:latest bash -lc '
+cp /host-code/src/plugins/internal/handlers/property.py \
+  /root/projs/ODGen/src/plugins/internal/handlers/property.py
+cd /root/projs/ODGen
+rm -rf logs && mkdir -p logs
+python odgen.py -t proto_pollution -maq \
+  --list ./lists/proto_pollution.list --timeout 120
+cp logs/succ.log /host-results/proto_pollution.succ.log
+'
+```
+
+Then compare the logs:
+
+```bash
+diff pp-artifact-master/proto_pollution.succ.log \
+     pp-artifact-improved/proto_pollution.succ.log
+```
+
+Artifact result:
+
+| Version | Prototype-pollution reports |
+| ------- | --------------------------- |
+| Original `master` | 8 |
+| `improve-prototype-pollution` | 17 |
+
+The improved branch reported 9 additional packages. These are additional
+static-analysis findings and have not been manually confirmed as true
+positives.
+
+### Broader source and sink coverage
+
+Branch: [`improved-detection-coverage`](https://github.com/sund02/ODGen/tree/improved-detection-coverage)
+
+This branch expands attacker-controlled sources such as HTTP request bodies,
+query parameters, headers, cookies, command-line arguments, and environment
+variables. It also adds commonly used sinks such as `execFileSync`, `fork`,
+`spawnSync`, `res.send`, `res.json`, `sendFile`, `fs.readFile`,
+`fs.createReadStream`, and `fs.writeFile`. The path-traversal rule now uses the
+broader `has_user_input()` check instead of only checking a single URL
+variable.
+
+Run the grouped artifact benchmark on `master`:
+
+```bash
+git switch master
+mkdir -p broader-artifact-original
+
+docker run --rm \
+  -v "$PWD/broader-artifact-original:/host-results" \
+  iamthesong/odgen:latest bash -lc '
+cd /root/projs/ODGen
+for t in xss ipt path_traversal proto_pollution code_exec os_command
+do
+  rm -rf logs && mkdir -p logs
+  python odgen.py -t "$t" -maq --list "./lists/$t.list" --timeout 120
+  cp logs/succ.log "/host-results/$t.succ.log" || true
+done
+'
+```
+
+Run the same benchmark with the improved coverage files:
+
+```bash
+git switch improved-detection-coverage
+mkdir -p broader-artifact-improved
+
+docker run --rm \
+  -v "$PWD:/host-code:ro" \
+  -v "$PWD/broader-artifact-improved:/host-results" \
+  iamthesong/odgen:latest bash -lc '
+cd /host-code
+cp --parents \
+  builtin_packages/child_process.js \
+  builtin_packages/express.js \
+  builtin_packages/fs.js \
+  builtin_packages/http.js \
+  builtin_packages/https.js \
+  builtin_packages/process.js \
+  builtin_packages/ws.js \
+  builtin_packages/yargs.js \
+  src/core/checker.py \
+  src/core/trace_rule.py \
+  src/core/vul_func_lists.py \
+  /root/projs/ODGen
+
+cd /root/projs/ODGen
+for t in xss ipt path_traversal proto_pollution code_exec os_command
+do
+  rm -rf logs && mkdir -p logs
+  python odgen.py -t "$t" -maq --list "./lists/$t.list" --timeout 120
+  cp logs/succ.log "/host-results/$t.succ.log" || true
+done
+'
+```
+
+Grouped artifact result:
+
+| Vulnerability type | Original | Improved | Change |
+| ------------------ | -------- | -------- | ------ |
+| `xss` | 12 | 12 | 0 |
+| `ipt` | 23 | 24 | +1 |
+| `path_traversal` | 30 | 30 | 0 |
+| `proto_pollution` | 8 | 8 | 0 |
+| `code_exec` | 5 | 5 | 0 |
+| `os_command` | 66 | 68 | +2 |
+
+The broader coverage branch produced 3 additional artifact reports:
+`solar@0.1.6` for internal property tampering, and
+`git-revision-webpack-plugin@3.0.4` and `mysql-dumper@6.3.0` for command
+injection. These reports have not been manually confirmed as true positives.
+
 ## Usage
 Use the following arugments to run the tool:
 
